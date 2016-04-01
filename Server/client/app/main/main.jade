@@ -1,0 +1,24 @@
+header#banner.hero-unit
+  .container
+    h4 Enter your alarm information below:
+
+.container(ng-init='init()')
+  .row
+    p(ng-show='saved') Saved!
+    p Enter each alarm below. Use XX-XX if you don't want to set a given day.
+    form.form.col-lg-12(ng-submit='saveForm()')
+      .row(ng-repeat='day in week')
+        p 
+          strong {{day.name}}
+        div.form-group.form-inline
+          div.form-group
+            label Hour
+            select.form-control(required ng-model='day.hour')
+              option(ng-repeat='hour in hourOptions' value='{{hour.value}}') {{hour.value}}
+          div.form-group
+            label Minute
+            select.form-control.inline(required ng-model='day.minute')
+              option(ng-repeat='minute in minuteOptions' value='{{minute.value}}') {{minute.value}}
+      .row
+        input.btn.btn-primary(type='submit')
+        
