@@ -33,12 +33,19 @@ int setAlarm(String command) {
     alarms[i] = individualCommands[i];
   }
 
-  Particle.publish("updated", alarms[5]);
+  Particle.publish("updated", lastCommand);
+  String tVal = String(adjustHour(Time.hour())) + " " + String(Time.minute(Time.now()));
+
+  Particle.publish("tval", tVal);
   return 1;
 }
 
 void setup()
 {
+  Particle.syncTime();
+  String tVal = String(adjustHour(Time.hour())) + " " + String(Time.minute(Time.now()));
+
+  Particle.publish("tval", tVal);
   strip.begin();
   strip.show(); // Initialize all pixels to "off"
   counter = 0;
@@ -57,13 +64,18 @@ void loop()
   }
 
   //get current day
-  int dayOfWeek = Time.weekday() - 1;
+  int dayOfWeek = 0;
+  if (Time.hour() < 4) {
+    dayOfWeek = Time.weekday() - 2;
+  } else {
+    dayOfWeek = Time.weekday() - 1;
+  }
   //get alarm for current day
   String currentAlarm = alarms[dayOfWeek];
   //if it is a valid and set alarm
 
   if (counter == 5000) {
-    String tVal = String(Time.hour()) + " " + String(Time.minute());
+    String tVal = String(adjustHour(Time.hour())) + " " + String(Time.minute());
     counter = 0;
   }
   counter++;
@@ -75,10 +87,10 @@ void loop()
     int hours = hours_s.toInt();
     int minutes = minutes_s.toInt();
     //within hour range
-    if (hours - Time.hour()-4 <= 1 && Time.hour()-4 - hours >= -1) {
+    if (hours - adjustHour(Time.hour()) <= 1 && adjustHour(Time.hour()) - hours >= -1) {
 
       //get minutes away from alarm
-      if (hours > Time.hour()) {
+      if (hours > adjustHour(Time.hour())) {
         //IE alarm at 2:10 and time now is 1:45
         int hourDiff = 60 - Time.minute();
         if (hourDiff + minutes <= 30) {
@@ -89,7 +101,7 @@ void loop()
         } else {
           resetToOff();
         }
-      } else if (hours == Time.hour()-4) {
+      } else if (hours == adjustHour(Time.hour())) {
         //IE alarm at 2:15 and time now is 2:05
         if (minutes >= Time.minute()) {
           if (minutes - Time.minute() <= 30) {{
@@ -125,7 +137,6 @@ void resetToOff() {
 void runAlarm(int minutesBeforeAlarm) {
   //scale minutes / 30 to x / 100
   int interval = (30 - minutesBeforeAlarm) / 30.0 * 100.0;
-  Particle.publish("interval", String(interval));
   setColor(interval);
 }
 
@@ -157,5 +168,13 @@ void setColor(int increment) {
     strip.setPixelColor(i, strip.Color(r,g,b));
     delay(50);
     strip.show();
+  }
+}
+
+int adjustHour(int hour) {
+  if (hour >= 4) {
+    return hour - 4;
+  } else {
+    return 20 + hour;
   }
 }
